@@ -1,6 +1,6 @@
 #include "graph.h"
 
-Graph::Graph(int n) : n(n), adj(n) {}
+Graph::Graph(int n) : n(n + 7), adj(n + 7) {}
 
 void Graph::addEdge(int u, int v) {
     adj[u].push_back(v);

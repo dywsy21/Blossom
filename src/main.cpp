@@ -7,15 +7,16 @@ using std::cout;
 
 int main() {
     cin.tie(0); cout.tie(0); std::ios::sync_with_stdio(0);
-    int n, m;
-    cin >> n >> m;
+    int n, t;
+    cin >> n >> t;
     Graph graph(n);
-    for (int i = 0; i < m; ++i) {
+    for (int i = 0; i < t; ++i) {
         int u, v;
         cin >> u >> v;
         graph.addEdge(u, v);
     }
-    std::vector<int> matching = findMaximumMatching(graph);
+    GraphSolver solver(graph);
+    std::vector<int> matching = solver.findMaximumMatching();
     int matchCount = 0;
     for (int i = 0; i < n; ++i) {
         if (matching[i] != -1 && i < matching[i]) {
