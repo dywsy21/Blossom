@@ -386,6 +386,86 @@ std::vector<int> GraphSolver::findMaximumMatching() {
 
 在这一部分，我们将基于带花树算法，设计更快速的并行算法来解决最大匹配问题。
 
+
+
+# 额外功能：可视化结果
+
+## 绘制结果：python代码实现
+
+为了更好地展示算法的结果，我们可以将图画出，并将最大匹配的边在图上标记出来。我们可以使用python的`matplotlib`与`networkx`库来实现这一功能。以下的代码位于根目录的`driver.py`文件中：
+
+```python
+import datetime
+import subprocess
+import random
+import networkx as nx
+import matplotlib.pyplot as plt
+import os
+
+def main():
+    num_vertices = random.randint(5, 10)
+    num_edges = random.randint(num_vertices - 1, num_vertices * (num_vertices - 1) // 2)
+    edges = set()
+
+    while len(edges) < num_edges:
+        u = random.randint(0, num_vertices - 1)
+        v = random.randint(0, num_vertices - 1)
+        if u != v:
+            edges.add((u, v))
+
+    input_data = f"{num_vertices} {len(edges)}\n"
+    for u, v in edges:
+        input_data += f"{u} {v}\n"
+
+    process = subprocess.Popen(
+        ['build/graph_max_matching.exe'],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+    stdout, stderr = process.communicate(input=input_data)
+
+    matching = []
+    lines = stdout.strip().split('\n')
+    for line in lines[1:]:
+        tokens = line.strip().split()
+        if len(tokens) == 2:
+            u, v = map(int, tokens)
+            matching.append((u, v))
+
+    G = nx.Graph()
+    G.add_nodes_from(range(num_vertices))
+    G.add_edges_from(edges)
+
+    pos = nx.spring_layout(G)
+    plt.figure(figsize=(8, 6))
+
+    nx.draw_networkx_edges(G, pos, edgelist=edges, width=1.0, alpha=0.5)
+    nx.draw_networkx_edges(G, pos, edgelist=matching, width=2.0, edge_color='r')
+    nx.draw_networkx_nodes(G, pos, node_size=300)
+    nx.draw_networkx_labels(G, pos)
+
+    date_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    os.makedirs('output_img', exist_ok=True)
+    plt.savefig(f'output_img/{date_time}.png')
+    plt.show()
+
+if __name__ == '__main__':
+    main()
+```
+
+在这段代码中，我们首先生成一个随机图，然后调用编译好的C/C++程序来求解最大匹配；最后，我们使用`networkx`与`matplotlib`库将图画出，并将最大匹配的边标记为红色。最终的结果将保存在`output_img`文件夹中，文件名为日期/时间，以确保每张图的文件名均不同。
+
+## 样例图
+
+以下为两张样例图：
+
+![样例图1](examples/20241206150015.png)
+![样例图2](examples/20241206150141.png)
+
+从图中我们可以直观地看到：我们实现的带花树算法得到了正确的最大匹配。
+
 # 总结
 
 
