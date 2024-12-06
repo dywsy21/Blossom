@@ -7,10 +7,9 @@ using std::cout;
 
 int main() {
     cin.tie(0); cout.tie(0); std::ios::sync_with_stdio(0);
-    int n, t;
-    cin >> n >> t;
+    int n, k; cin >> n >> k;
     Graph graph(n);
-    for (int i = 0; i < t; ++i) {
+    for (int i = 0; i < k; ++i) {
         int u, v;
         cin >> u >> v;
         graph.addEdge(u, v);
