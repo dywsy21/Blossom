@@ -15,3 +15,8 @@ int Graph::getNumVertices() const {
     return n;
 }
 
+void Graph::setSize(int newSize) {
+    n = newSize + 7;
+    adj.resize(n);
+}
+

@@ -12,10 +12,12 @@ private:
     int n; // number of vertices
     std::vector<std::vector<int>> adj; // adjacency list
 public:
+    Graph() {}
     Graph(int n);
     void addEdge(int u, int v);
     const std::vector<int>& getNeighbors(int u) const;
     int getNumVertices() const;
+    void setSize(int newSize);
 };
 
 #endif // GRAPH_H

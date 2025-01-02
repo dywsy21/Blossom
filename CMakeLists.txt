@@ -10,6 +10,7 @@ add_executable(graph_max_matching
     src/graph_max_matching.cpp
     src/getopt.cpp
     src/graph.cpp
+    src/unionfind.cpp
 )
 
 # set O3 optimization

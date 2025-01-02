@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 import os
 
 def main():
-    num_vertices = random.randint(5, 10)
-    num_edges = random.randint(num_vertices - 1, num_vertices * (num_vertices - 1) // 2)
+    num_vertices = random.randint(5, 20)
+    num_edges = random.randint(1, num_vertices * (num_vertices - 1) // 2)
     edges = set()
 
     while len(edges) < num_edges:

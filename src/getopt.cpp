@@ -1,50 +1,57 @@
 #include "getopt.h"
+#include <cstring>
 
-const char* strchr(const char* str, int c) {
-    while (*str != '\0') {
-        if (*str == c) {
-            return str;
-        }
-        str++;
-    }
-    return nullptr;
-}
+char* optarg = nullptr;
+int optind = 1;
+int optopt = 0;
+int opterr = 1;
 
-int getopt(int argc, char *const argv[], const char *optstring) {
-    static int optind = 1;
-    static int optopt;
-    static char *next = NULL;
+static int optwhere = 1;
 
-    if (optind >= argc) {
-        return -1;
-    }
-
-    if (next == NULL || *next == '\0') {
-        next = argv[optind];
-        if (*next != '-') {
+int getopt(int argc, char* const argv[], const char* optstring) {
+    if (argc < 2) return -1;
+    
+    if (optwhere == 1) {
+        if (optind >= argc || argv[optind][0] != '-' || argv[optind][1] == '\0') {
             return -1;
         }
-        next++;
-        optind++;
+        if (strcmp(argv[optind], "--") == 0) {
+            optind++;
+            return -1;
+        }
     }
 
-    optopt = *next++;
-    const char *opt = strchr(optstring, optopt);
-    if (opt == NULL) {
+    optopt = argv[optind][optwhere];
+    
+    const char* oli = strchr(optstring, optopt);
+    if (optopt == ':' || !oli) {
+        if (argv[optind][++optwhere] == '\0') {
+            optwhere = 1;
+            optind++;
+        }
         return '?';
     }
 
-    if (*(opt + 1) == ':') {
-        if (*next != '\0') {
-            optarg = next;
-            next = NULL;
-        } else if (optind < argc) {
-            optarg = argv[optind];
+    if (oli[1] != ':') {  // Don't need argument
+        if (argv[optind][++optwhere] == '\0') {
+            optwhere = 1;
             optind++;
-        } else {
-            return ':';
         }
+        optarg = nullptr;
+    } else {  // Need argument
+        if (argv[optind][optwhere + 1] != '\0') {
+            optarg = &argv[optind][optwhere + 1];
+        } else if (++optind >= argc) {
+            optwhere = 1;
+            return '?';
+        } else {
+            optarg = argv[optind];
+        }
+        optwhere = 1;
+        optind++;
     }
-
+    
     return optopt;
 }
+
+// Remove the custom strchr implementation - we'll use the one from cstring
