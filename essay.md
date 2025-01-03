@@ -15,15 +15,15 @@ using_table_of_content: true
 
 ## 问题描述与定义
 
-给定一个图 $G = (V, E)$，求出一个最大的边集$M$，使得$M$是$G$的一个匹配。
+给定一个图 $G = (V, E)$，求出一个最大的边集$M$，使得$M$是$G$的一个匹配。其中最大代表$M$所含边的数量最多。
 
 ## 重要理论基础
 
 ### 交错路径与增广路径
 
 1. 非匹配点/非匹配边：如果$G$中一点或一边不在匹配$M$中，则称其为非匹配点或非匹配边。
-2. 交错路径：一条交错路径是一个匹配边和非匹配边上交替出现的，且首尾两点至少有一个是非匹配点的路径。
-3. 增广路径：一条交错路径，且路径的起点和终点都是非匹配点。
+2. 交错路径：一条交错路径是一个匹配边和非匹配边交替出现，且首尾两点至少有一个是非匹配点的路径。
+3. 增广路径：一条交错路径，且路径的起点和终点都是非匹配点。(或开始的边和末尾的边均为非匹配边)
 
 显然，如果存在一条增广路径，那么可以通过将路径上的匹配边和非匹配边交换，从而增加匹配的边数。
 
@@ -43,16 +43,18 @@ using_table_of_content: true
 2. 一个边在$M$和$M'$之间交替出现的偶环。
 3. 一个边在$M$和$M'$之间交替出现的路径，且端点不同。
 
-通过观察$G'$中的每个顶点最多可以与2条边相连：一条来自$M$，一条来自$M'$，可以证明这个引理。每个顶点度数小于等于2的图必须由孤立顶点、环和路径组成。此外，$G'$中的每条路径和环必须在$M$和$M'$之间交替出现。为了使环做到这一点，它必须包含相等数量的来自$M$和$M'$的边，因此长度必须为偶数。
+$G'$中的每个顶点度数最多为2：所连的两条边一条来自$M$，一条来自$M'$；每个顶点度数小于等于2的图必须由孤立顶点、环和路径组成。此外，$G'$中的每条路径和环必须在$M$和$M'$之间交替出现。为了使环做到这一点，它必须包含相等数量的来自$M$和$M'$的边，因此长度必须为偶数。
 
-设$M'$是$G$中比$M$更大的匹配。考虑$D$，即$M$和$M'$的对称差。注意到$D$由路径和偶环组成（如前面的引理所述）。由于$M'$比$M$大，$D$包含一个比$M'$多边的分量。这样的分量是$G$中以$M'$的边开始和结束的路径，因此它是一个增广路径。
+因此每个连通分支要么是一条路径，要么是偶环，或者是平凡图(孤立点)。引理得证。
+
+我们通过反证法证明Berge定理的充分性：设$M'$是$G$中比$M$更大的匹配。考虑$D$，即$M$和$M'$的对称差。注意到$D$由路径和偶环组成（如前面的引理所述）。由于$M'$比$M$大，$D$包含一个比$M'$多边的分量。这样的分量是$G$中以$M'$的边开始和结束的路径，因此它是一个增广路径，与假设矛盾。故原命题成立。
 
 ### 问题与解决方案
 我们的思路就是不断遍历所有非匹配点，从而在图中寻找到所有的增广路径，这样就能找到图的最大匹配。
 
 在二分图中，这种方式是可行的，利用这一思想的著名算法包括匈牙利算法[3]。
 
-然而，对于一般的图，失去了二分图的假设就代表着图中可能含有奇环，而增广路径的方法有且仅有一个问题：碰到奇环时，不能简单地将路径上的匹配边和非匹配边交换，因为这样会破坏匹配的性质。
+然而，对于一般的图，失去了二分图的假设就代表着图中可能含有奇环，而增广路径的方法有且仅有一个问题：碰到奇环时，不能简单地将路径上的匹配边和非匹配边交换，因为这样会破坏匹配的性质。(可能一个点连两条边)
 
 带花树算法就旨在解决这个问题。带花树算法的核心思想是：将图中的所有奇环（"花"）缩成一个点，从而将问题转化为一个二分图的最大匹配问题。
 
@@ -64,7 +66,7 @@ using_table_of_content: true
 - 如果找到另一未匹配点，则可以形成一条增广路径。
 
 2. **处理奇环（缩环操作）**
-- 当在搜索中发现一个奇数环（即 BFS/DFS 遇到一个已经访问过的点，并且两个路径的深度相同），则将其缩成一个点，在缩环后的图中继续搜索增广路径。
+- 当在搜索中发现一个奇环（即 BFS/DFS 遇到一个已经访问过的点，并且两个路径的深度相同），则将其缩成一个点，在缩环后的图中继续搜索增广路径。
 
 - 如果在缩环后的图中找到了增广路径，将该路径还原到原图中。
 
@@ -412,12 +414,163 @@ std::vector<int> GraphSolver::findMaximumMatching() {
 
 ## 判断连通性——并查集的实现
 
+为了实现并行算法，我们首先需要判断图中的连通分支。我们可以使用并查集来实现这一功能。
+
+我们将并查集的实现放在一个独立的类`UnionFind`中，其定义如下：
+
+```cpp
+class UnionFind {
+private:
+    std::vector<int> root;
+public:
+    UnionFind() {}
+    UnionFind(int n);
+    int findRoot(int x);
+    void unite(int x, int y);
+    void setSize(int n);
+};
+```
+
+具体函数的实现如下：
+
+```cpp
+UnionFind::UnionFind(int _n) : root(_n) {
+    for(int i = 0; i < _n; i++) root[i] = i;
+}
+
+int UnionFind::findRoot(int x) {
+    return x == root[x] ? x : root[x] = findRoot(root[x]);
+}
+
+void UnionFind::unite(int x, int y) {
+    int x_root = findRoot(x), y_root = findRoot(y);
+    root[x_root] = y_root;
+}
+
+void UnionFind::setSize(int n) {
+    root.resize(n);
+    for (int i = 0; i < n; i++) {
+        root[i] = i;
+    }
+}
+```
+
+我们主要实现了以下两个功能：
+
+1. `findRoot`：查找x所在的连通分支的根节点。
+2. `unite`：合并两个连通分支。
+
+鉴于并查集本身的性质，我们可以在$O(\alpha(n))$的时间内完成这两个操作，其中$\alpha(n)$是Ackermann函数的反函数，增长极其缓慢。这也意味着我们可以在很短的时间内完成图的连通性判断，为并行算法会有更高的效率打下了基础。
+
 ## 并行算法的实现
 
+### 使用哈希表储存每个根节点的连通分支的所有节点
+
+在并行算法中，我们需要将每个连通分支的所有节点储存在一个哈希表中，以便在并行求解最大匹配时能够快速找到每个连通分支的所有节点。
+
+首先，我们在读取图的时候顺便使用`unite`来合并连通分支：
+
+```cpp
+    for (int i = 0; i < k; ++i) {
+        int u, v;
+        cin >> u >> v;
+        edges.push_back({u, v});
+        uf.unite(u, v);
+    }
+```
+
+然后，使用`unordered_map`来储存每个根节点的连通分支的所有节点：
+
+```cpp
+    std::unordered_map<int, std::vector<int>> components;
+    for (int i = 0; i < n; ++i) {
+        components[uf.findRoot(i)].push_back(i);
+    }
+```
+
+### 并行求解最大匹配
+
+并行的核心部分逻辑很容易理解：只需为每个连通分支分配一个`thread`来跑，然后各自创建一个`GraphSolver`对象，在每个连通分支上独立求解最大匹配，最后将所有连通分支的最大匹配合并即可。
+
+将各个连通分支并行求解的核心逻辑如下：
+
+```cpp
+    std::vector<int> matching(n, -1);
+    std::vector<std::thread> threads;
+    std::vector<std::vector<int>> subMatches(components.size());
+    int compIndex = 0;
+
+    for (auto &comp : components) {
+        threads.push_back(std::thread([&, compIndex]() {
+            std::vector<int> &nodes = comp.second;
+            std::unordered_map<int,int> idx; // old->new index
+            for (int i = 0; i < (int)nodes.size(); ++i) {
+                idx[nodes[i]] = i;
+            }
+            Graph subG(nodes.size());
+            for (auto &e : edges) {
+                if (uf.findRoot(e.first) == comp.first && uf.findRoot(e.second) == comp.first) {
+                    subG.addEdge(idx[e.first], idx[e.second]);
+                }
+            }
+
+            GraphSolver solver(subG);
+            subMatches[compIndex] = solver.findMaximumMatching();
+        }));
+        compIndex++;
+    }
+```
+
+然后，在合并所有连通分支的最大匹配之前，我们需要确保所有线程都已经运行完：
+
+```cpp
+    for (auto &t : threads) t.join();
+```
+
+最后，我们将所有连通分支的最大匹配合并：
+
+```cpp
+    compIndex = 0;
+    for (auto &comp : components) {
+        std::vector<int> &nodes = comp.second;
+        for (int i = 0; i < (int)nodes.size(); ++i) {
+            int sm = subMatches[compIndex][i];
+            if (sm != -1) {
+                matching[nodes[i]] = nodes[sm];
+            }
+        }
+        compIndex++;
+    }
+```
+
+这样就完成了并行算法的实现。
 
 # 额外功能
 
 ## 让程序接收命令行参数
+
+为了让程序更加灵活，我们可以让程序接收命令行参数，从而可以更方便地调整程序的行为。
+
+我们使用了`getopt`库来实现这一功能。考虑到windows上没有`getopt`库，我们自己实现了一个简易的`getopt`库，详见src/getopt.h，src/getopt.cpp。
+
+我们将程序的命令行参数定义如下：
+
+```
+Usage: graph_max_matching [options] [filename]
+Options:
+ -h            Show help
+ -v            Verbose mode
+ -o outfile    Specify output file
+ filename      Input file containing the graph
+```
+ 
+在命令行参数中直接给出输入文件名可以让程序转从这份文件中读取输入，而不必手动输入；`-h`参数可以显示帮助信息；`-v`参数可以打开详细输出模式；`-o`参数可以指定输出文件，而不必将结果输出到标准输出。
+
+一个使用示例为在根目录下输入：
+
+```bash
+./build/graph_max_matching -v -o examples/io_file/output.txt examples/io_file/input.txt
+```
 
 ## 可视化结果：python代码实现
 
@@ -489,9 +642,8 @@ if __name__ == '__main__':
 ## 样例图
 
 以下为两张样例图：
-
-![样例图1](examples/20241206150015.png)
-![样例图2](examples/20241206150141.png)
+![样例图1](examples/pics/20241206150015.png)
+![样例图2](examples/pics/20241206150141.png)
 从图中我们可以直观地看到：我们实现的带花树算法得到了正确的最大匹配。
 
 # 程序的使用
@@ -517,6 +669,13 @@ make -j$(nproc)
 
 # 总结
 
+在本论文中，我们实现了求解任意图的最大匹配的带花树算法。我们首先实现了带花树算法的核心逻辑，然后实现了并行算法，最后实现了一些额外功能，如命令行参数的解析、图的可视化等。
+
+在实现的过程中遇到了一些问题，如如何将带花树算法的一些叙述起来方便但不方便落到实处的细节实施下去、如何将图的信息传递给并行线程等。我们通过谨慎选择数据结构，通过C++标准库的`thread`来实现并行算法，最终成功地解决了这些问题。
+
+在实现的过程中，我也学到了很多知识，如将一个算法用程序实现的普遍步骤、并行算法的设计、命令行参数的解析等。这些知识对今后的学习和工作都有很大的帮助。
+
+在未来，程序还可以被进一步完善，如实现更多的额外功能、优化算法的性能等。这些工作将会使我们的程序更加完善，更加实用。
 
 # 参考文献
 

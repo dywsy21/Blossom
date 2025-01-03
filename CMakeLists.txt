@@ -15,3 +15,6 @@ add_executable(graph_max_matching
 
 # set O3 optimization
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+
+# set other optimization flags
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -mtune=native")
