@@ -7,7 +7,7 @@ import os
 
 def main():
     num_vertices = random.randint(5, 20)
-    num_edges = random.randint(1, num_vertices * (num_vertices - 1) // 2)
+    num_edges = random.randint(4, num_vertices * (num_vertices - 1) // 2)
     edges = set()
 
     while len(edges) < num_edges:
@@ -19,9 +19,13 @@ def main():
     input_data = f"{num_vertices} {len(edges)}\n"
     for u, v in edges:
         input_data += f"{u} {v}\n"
+        
+    # detect the current os, if it is windows, then use 'build/graph_max_matching.exe'
+    # otherwise, use 'build/graph_max_matching'
+    args = ['build/graph_max_matching.exe'] if os.name == 'nt' else ['build/graph_max_matching']
 
     process = subprocess.Popen(
-        ['build/graph_max_matching.exe'],
+        args,
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
