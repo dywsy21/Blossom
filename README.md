@@ -23,8 +23,9 @@ cmake --build . --config Release
 ```
 
 # To run:
+
+Just use the driver script:
+
 ```bash
-
-
-
+python driver.py
 ```
